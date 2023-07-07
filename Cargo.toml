@@ -1,0 +1,11 @@
+[package]
+name = "room"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lucas Rosa <x@rvcas.dev>"]
+
+[dependencies]
+ansi_term = "0.12.1"
+chrono = "0.4.26"
+owo-colors = "3.5.0"
+zellij-tile = "0.37.2"
