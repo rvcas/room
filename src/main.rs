@@ -107,12 +107,16 @@ impl ZellijPlugin for State {
                 should_render = true;
             }
 
-            Event::Key(Key::Down) => {
+            Event::Key(Key::Esc | Key::Ctrl('c')) => {
+                close_focus();
+            }
+
+            Event::Key(Key::Down | Key::BackTab) => {
                 self.select_down();
 
                 should_render = true;
             }
-            Event::Key(Key::Up) => {
+            Event::Key(Key::Up | Key::Ctrl('k')) => {
                 self.select_up();
 
                 should_render = true;
@@ -124,6 +128,7 @@ impl ZellijPlugin for State {
                     .find(|tab| Some(tab.position) == self.selected);
 
                 if let Some(tab) = tab {
+                    close_focus();
                     switch_tab_to(tab.position as u32 + 1);
                 }
             }
