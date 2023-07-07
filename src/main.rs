@@ -18,11 +18,14 @@ impl Default for State {
 }
 
 impl State {
-    fn viewable_tabs(&self) -> Vec<&TabInfo> {
+    fn viewable_tabs_iter(&self) -> impl Iterator<Item = &TabInfo> {
         self.tabs
             .iter()
             .filter(|tab| tab.name == self.filter || tab.name.contains(&self.filter))
-            .collect()
+    }
+
+    fn viewable_tabs(&self) -> Vec<&TabInfo> {
+        self.viewable_tabs_iter().collect()
     }
 
     fn reset_selection(&mut self) {
@@ -32,6 +35,59 @@ impl State {
             self.selected = None
         } else if let Some(tab) = tabs.first() {
             self.selected = Some(tab.position)
+        }
+    }
+
+    fn select_down(&mut self) {
+        let tabs = self
+            .tabs
+            .iter()
+            .filter(|tab| tab.name == self.filter || tab.name.contains(&self.filter));
+
+        let mut can_select = false;
+        let mut first = None;
+        for TabInfo { position, .. } in tabs {
+            if first.is_none() {
+                first.replace(position);
+            }
+
+            if can_select {
+                self.selected = Some(*position);
+                return;
+            } else if Some(*position) == self.selected {
+                can_select = true;
+            }
+        }
+
+        if let Some(position) = first {
+            self.selected = Some(*position)
+        }
+    }
+
+    fn select_up(&mut self) {
+        let tabs = self
+            .tabs
+            .iter()
+            .filter(|tab| tab.name == self.filter || tab.name.contains(&self.filter))
+            .rev();
+
+        let mut can_select = false;
+        let mut last = None;
+        for TabInfo { position, .. } in tabs {
+            if last.is_none() {
+                last.replace(position);
+            }
+
+            if can_select {
+                self.selected = Some(*position);
+                return;
+            } else if Some(*position) == self.selected {
+                can_select = true;
+            }
+        }
+
+        if let Some(position) = last {
+            self.selected = Some(*position)
         }
     }
 }
@@ -52,16 +108,12 @@ impl ZellijPlugin for State {
             }
 
             Event::Key(Key::Down) => {
-                if let Some(s) = self.selected.as_mut() {
-                    *s += 1
-                }
+                self.select_down();
 
                 should_render = true;
             }
             Event::Key(Key::Up) => {
-                if let Some(s) = self.selected.as_mut() {
-                    *s -= 1
-                }
+                self.select_up();
 
                 should_render = true;
             }
@@ -108,8 +160,7 @@ impl ZellijPlugin for State {
 
         println!(
             "{}",
-            self.viewable_tabs()
-                .into_iter()
+            self.viewable_tabs_iter()
                 .map(|tab| {
                     let row = if tab.active {
                         format!("{} - {}", tab.position + 1, tab.name)
