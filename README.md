@@ -3,6 +3,8 @@
 A [Zellij](https://zellij.dev) plugin for quickly searching
 and switching between tabs.
 
+![usage](https://github.com/rvcas/room/raw/main/img/usage.gif)
+
 ## Usage
 
 - `Tab` to cycle through tab list
