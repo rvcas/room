@@ -1,4 +1,5 @@
 use owo_colors::OwoColorize;
+use std::collections::BTreeMap;
 use zellij_tile::prelude::*;
 
 struct State {
@@ -95,7 +96,15 @@ impl State {
 register_plugin!(State);
 
 impl ZellijPlugin for State {
-    fn load(&mut self) {
+    fn load(&mut self, _configuration: BTreeMap<String, String>) {
+        // we need the ReadApplicationState permission to receive the ModeUpdate and TabUpdate
+        // events
+        // we need the ChangeApplicationState permission to Change Zellij state (Panes, Tabs and UI)
+        request_permission(&[
+            PermissionType::ReadApplicationState,
+            PermissionType::ChangeApplicationState,
+        ]);
+
         subscribe(&[EventType::TabUpdate, EventType::Key]);
     }
 
