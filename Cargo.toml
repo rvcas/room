@@ -8,4 +8,4 @@ authors = ["Lucas Rosa <x@rvcas.dev>"]
 ansi_term = "0.12.1"
 chrono = "0.4.26"
 owo-colors = "3.5.0"
-zellij-tile = "0.37.2"
+zellij-tile = "0.38.0"
