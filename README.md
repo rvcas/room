@@ -25,7 +25,7 @@ You'll need [rust](https://rustup.rs/) installed.
 
 - `git clone git@github.com:rvcas/room.git`
 - `cd room`
-- `cargo build --release`
+- `rustup target add wasm32-wasi && cargo build --release`
 - `mkdir -p ~/.config/zellij/plugins/`
 - `mv target/wasm32-wasi/release/room.wasm ~/.config/zellij/plugins/`
 
