@@ -39,12 +39,17 @@ shared_except "locked" {
     bind "Ctrl y" {
         LaunchOrFocusPlugin "file:~/.config/zellij/plugins/room.wasm" {
             floating true
+            ignore_case true
         }
     }
 }
 ```
 
 > You likely already have a `shared_except "locked"` section in your configs. Feel free to add `bind` there.
+
+
+The `ignore_case` defaults to `false` if absent. If set to `true`, filtering the tab names ignores
+the case of the filter string and the tab name.
 
 ## Contributing
 

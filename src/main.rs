@@ -6,6 +6,7 @@ struct State {
     tabs: Vec<TabInfo>,
     filter: String,
     selected: Option<usize>,
+    ignore_case: bool,
 }
 
 impl Default for State {
@@ -14,15 +15,25 @@ impl Default for State {
             tabs: Vec::default(),
             filter: String::default(),
             selected: Some(0),
+            ignore_case: false,
         }
     }
 }
 
 impl State {
+
+    fn filter(&self, tab: &&TabInfo) -> bool {
+        if self.ignore_case {
+            tab.name.to_lowercase() == self.filter.to_lowercase() || tab.name.to_lowercase().contains(&self.filter.to_lowercase())
+        } else {
+            tab.name == self.filter || tab.name.contains(&self.filter)
+        }
+    }
+
     fn viewable_tabs_iter(&self) -> impl Iterator<Item = &TabInfo> {
         self.tabs
             .iter()
-            .filter(|tab| tab.name == self.filter || tab.name.contains(&self.filter))
+            .filter(|tab| self.filter(tab))
     }
 
     fn viewable_tabs(&self) -> Vec<&TabInfo> {
@@ -43,7 +54,7 @@ impl State {
         let tabs = self
             .tabs
             .iter()
-            .filter(|tab| tab.name == self.filter || tab.name.contains(&self.filter));
+            .filter(|tab| self.filter(tab));
 
         let mut can_select = false;
         let mut first = None;
@@ -69,7 +80,7 @@ impl State {
         let tabs = self
             .tabs
             .iter()
-            .filter(|tab| tab.name == self.filter || tab.name.contains(&self.filter))
+            .filter(|tab| self.filter(tab))
             .rev();
 
         let mut can_select = false;
@@ -104,6 +115,11 @@ impl ZellijPlugin for State {
             PermissionType::ReadApplicationState,
             PermissionType::ChangeApplicationState,
         ]);
+
+        self.ignore_case = match _configuration.get(&"ignore_case" as &str) {
+            Some(value) => value.trim().parse().unwrap(),
+            None => true
+        };
 
         subscribe(&[EventType::TabUpdate, EventType::Key]);
     }
