@@ -27,7 +27,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ github.ref }}
+          name: ${{ github.ref_name }}
           tag_name: ${{ github.ref }}
           files: |
             target/wasm32-wasi/release/room.wasm

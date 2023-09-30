@@ -21,13 +21,19 @@ that let’s me type to filter the tab list and then press enter to jump to the 
 
 ## Installation
 
-You'll need [rust](https://rustup.rs/) installed.
+Download `room.wasm` from the [latest release](https://github.com/rvcas/room/releases/latest)
 
-- `git clone git@github.com:rvcas/room.git`
-- `cd room`
-- `rustup target add wasm32-wasi && cargo build --release`
 - `mkdir -p ~/.config/zellij/plugins/`
-- `mv target/wasm32-wasi/release/room.wasm ~/.config/zellij/plugins/`
+- `mv room.wasm ~/.config/zellij/plugins/`
+
+> You don't need to keep `room.wasm` at this specified location. It's just where I like to
+> keep my zellij plugins.
+
+### Quick Install
+
+```
+curl -L "https://github.com/rvcas/room/releases/latest/download/room.wasm" -o ~/.config/zellij/plugins/room.wasm
+```
 
 ## Keybinding
 
@@ -46,7 +52,6 @@ shared_except "locked" {
 ```
 
 > You likely already have a `shared_except "locked"` section in your configs. Feel free to add `bind` there.
-
 
 The `ignore_case` defaults to `false` if absent. If set to `true`, filtering the tab names ignores
 the case of the filter string and the tab name.
