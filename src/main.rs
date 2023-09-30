@@ -21,19 +21,20 @@ impl Default for State {
 }
 
 impl State {
-
     fn filter(&self, tab: &&TabInfo) -> bool {
         if self.ignore_case {
-            tab.name.to_lowercase() == self.filter.to_lowercase() || tab.name.to_lowercase().contains(&self.filter.to_lowercase())
+            tab.name.to_lowercase() == self.filter.to_lowercase()
+                || tab
+                    .name
+                    .to_lowercase()
+                    .contains(&self.filter.to_lowercase())
         } else {
             tab.name == self.filter || tab.name.contains(&self.filter)
         }
     }
 
     fn viewable_tabs_iter(&self) -> impl Iterator<Item = &TabInfo> {
-        self.tabs
-            .iter()
-            .filter(|tab| self.filter(tab))
+        self.tabs.iter().filter(|tab| self.filter(tab))
     }
 
     fn viewable_tabs(&self) -> Vec<&TabInfo> {
@@ -51,10 +52,7 @@ impl State {
     }
 
     fn select_down(&mut self) {
-        let tabs = self
-            .tabs
-            .iter()
-            .filter(|tab| self.filter(tab));
+        let tabs = self.tabs.iter().filter(|tab| self.filter(tab));
 
         let mut can_select = false;
         let mut first = None;
@@ -77,11 +75,7 @@ impl State {
     }
 
     fn select_up(&mut self) {
-        let tabs = self
-            .tabs
-            .iter()
-            .filter(|tab| self.filter(tab))
-            .rev();
+        let tabs = self.tabs.iter().filter(|tab| self.filter(tab)).rev();
 
         let mut can_select = false;
         let mut last = None;
@@ -107,7 +101,7 @@ impl State {
 register_plugin!(State);
 
 impl ZellijPlugin for State {
-    fn load(&mut self, _configuration: BTreeMap<String, String>) {
+    fn load(&mut self, configuration: BTreeMap<String, String>) {
         // we need the ReadApplicationState permission to receive the ModeUpdate and TabUpdate
         // events
         // we need the ChangeApplicationState permission to Change Zellij state (Panes, Tabs and UI)
@@ -116,9 +110,9 @@ impl ZellijPlugin for State {
             PermissionType::ChangeApplicationState,
         ]);
 
-        self.ignore_case = match _configuration.get(&"ignore_case" as &str) {
+        self.ignore_case = match configuration.get("ignore_case" as &str) {
             Some(value) => value.trim().parse().unwrap(),
-            None => true
+            None => true,
         };
 
         subscribe(&[EventType::TabUpdate, EventType::Key]);
