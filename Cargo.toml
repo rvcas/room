@@ -1,6 +1,6 @@
 [package]
 name = "room"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Lucas Rosa <x@rvcas.dev>"]
 publish = false
