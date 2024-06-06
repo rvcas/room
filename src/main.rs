@@ -14,7 +14,7 @@ impl Default for State {
         Self {
             tabs: Vec::default(),
             filter: String::default(),
-            selected: Some(0),
+            selected: None,
             ignore_case: false,
         }
     }
@@ -122,6 +122,17 @@ impl ZellijPlugin for State {
         let mut should_render = false;
         match event {
             Event::TabUpdate(tab_info) => {
+                self.selected =
+                    tab_info.iter().find_map(
+                        |tab| {
+                            if tab.active {
+                                Some(tab.position)
+                            } else {
+                                None
+                            }
+                        },
+                    );
+
                 self.tabs = tab_info;
                 should_render = true;
             }
