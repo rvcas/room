@@ -2,22 +2,12 @@ use owo_colors::OwoColorize;
 use std::collections::BTreeMap;
 use zellij_tile::prelude::*;
 
+#[derive(Default)]
 struct State {
     tabs: Vec<TabInfo>,
     filter: String,
     selected: Option<usize>,
     ignore_case: bool,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            tabs: Vec::default(),
-            filter: String::default(),
-            selected: None,
-            ignore_case: false,
-        }
-    }
 }
 
 impl State {
