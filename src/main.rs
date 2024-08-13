@@ -18,16 +18,30 @@ struct State {
 
 impl Default for State {
     fn default() -> Self {
-        Self {
-            tabs: Default::default(),
-            filter: Default::default(),
-            selected: Default::default(),
-            ignore_case: true,
-            selection_color: AnsiColors::Cyan,
-            active_tab_color: Some(AnsiColors::Red),
-            underline_active: false,
-            apply_selection_for_foreground_instead: false,
-            apply_active_color_for_background_instead: false,
+        if cfg!(feature = "updated_defaults") {
+            Self {
+                tabs: Default::default(),
+                filter: Default::default(),
+                selected: Default::default(),
+                ignore_case: true,
+                selection_color: AnsiColors::Yellow,
+                active_tab_color: None,
+                underline_active: true,
+                apply_selection_for_foreground_instead: true,
+                apply_active_color_for_background_instead: false,
+            }
+        } else {
+            Self {
+                tabs: Default::default(),
+                filter: Default::default(),
+                selected: Default::default(),
+                ignore_case: true,
+                selection_color: AnsiColors::Cyan,
+                active_tab_color: Some(AnsiColors::Red),
+                underline_active: false,
+                apply_selection_for_foreground_instead: false,
+                apply_active_color_for_background_instead: false,
+            }
         }
     }
 }
@@ -135,8 +149,8 @@ impl ZellijPlugin for State {
         }
         if let Some(x) = configuration.remove("apply_selection_accent_to") {
             match x.as_str() {
-                "foreground" | "fg" => self.apply_selection_for_foreground_instead = true,
                 "background" | "bg" => self.apply_selection_for_foreground_instead = false,
+                "foreground" | "fg" => self.apply_selection_for_foreground_instead = true,
                 _ => panic!("'apply_selection_accent_to' config value must be 'fg', 'foreground', 'bg' or 'background', but it's \"{x}\""),
             }
         }
