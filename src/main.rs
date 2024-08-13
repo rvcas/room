@@ -1,5 +1,6 @@
 use owo_colors::OwoColorize;
 use std::collections::BTreeMap;
+use std::fmt::Write;
 use zellij_tile::prelude::*;
 
 #[derive(Default)]
@@ -101,9 +102,24 @@ impl ZellijPlugin for State {
         ]);
 
         self.ignore_case = match configuration.get("ignore_case" as &str) {
-            Some(value) => value.trim().parse().unwrap(),
+            Some(value) => value.trim().parse().unwrap_or_else(|_| {
+                panic!(
+                    "'ingnore_case' config value must be 'true' or 'false', but it's \"{value}\""
+                )
+            }),
             None => true,
         };
+
+        if !configuration.is_empty() {
+            let stringified_map = configuration
+                .iter()
+                .fold(String::new(), |mut output, (k, v)| {
+                    let _ = writeln!(output, "('{k}': '{v}')\n");
+                    output
+                });
+            eprintln!("WARNING: The user added a config entry that isn't used.");
+            eprint!("{stringified_map}");
+        }
 
         subscribe(&[EventType::TabUpdate, EventType::Key]);
     }
