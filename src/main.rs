@@ -9,7 +9,11 @@ struct State {
     selected: Option<usize>,
     ignore_case: bool,
 
-    selection_background_color: AnsiColors,
+    selection_color: AnsiColors,
+    apply_selection_for_foreground_instead: bool,
+    active_tab_color: Option<AnsiColors>,
+    underline_active: bool,
+    apply_active_color_for_background_instead: bool,
 }
 
 impl Default for State {
@@ -19,7 +23,11 @@ impl Default for State {
             filter: Default::default(),
             selected: Default::default(),
             ignore_case: true,
-            selection_background_color: AnsiColors::Cyan,
+            selection_color: AnsiColors::Cyan,
+            active_tab_color: Some(AnsiColors::Red),
+            underline_active: false,
+            apply_selection_for_foreground_instead: false,
+            apply_active_color_for_background_instead: false,
         }
     }
 }
@@ -121,10 +129,40 @@ impl ZellijPlugin for State {
                 )
             });
         };
-        if let Some(color) = configuration.remove("selected_color") {
+        if let Some(color) = configuration.remove("selection_color") {
             // TODO: validate input
-            self.selection_background_color = color.trim().into();
+            self.selection_color = color.trim().into();
         }
+        if let Some(x) = configuration.remove("apply_selection_accent_to") {
+            match x.as_str() {
+                "foreground" | "fg" => self.apply_selection_for_foreground_instead = true,
+                "background" | "bg" => self.apply_selection_for_foreground_instead = false,
+                _ => panic!("'apply_selection_accent_to' config value must be 'fg', 'foreground', 'bg' or 'background', but it's \"{x}\""),
+            }
+        }
+        if let Some(color) = configuration.remove("active_tab_color") {
+            // TODO: validate input
+            let temp = color.trim();
+            if temp == "none" {
+                self.active_tab_color = None;
+            } else {
+                self.active_tab_color = Some(temp.into());
+            }
+        }
+        if let Some(x) = configuration.remove("apply_tab_color_to") {
+            match x.as_str() {
+                "background" | "bg" => self.apply_active_color_for_background_instead = true,
+                "foreground" | "fg" => self.apply_active_color_for_background_instead = false,
+                _ => panic!("'apply_tab_color_to' config value must be 'fg', 'foreground', 'bg' or 'background', but it's \"{x}\""),
+            }
+        }
+        if let Some(value) = configuration.remove("underline_active") {
+            self.underline_active = value.trim().parse().unwrap_or_else(|_| {
+                panic!(
+                    "'underline_active' config value must be 'true' or 'false', but it's \"{value}\""
+                )
+            });
+        };
 
         if !configuration.is_empty() {
             let stringified_map = configuration
@@ -204,6 +242,7 @@ impl ZellijPlugin for State {
         should_render
     }
 
+    #[allow(unused_mut)]
     fn render(&mut self, _rows: usize, _cols: usize) {
         println!(
             "{} {}",
@@ -219,20 +258,38 @@ impl ZellijPlugin for State {
             "{}",
             self.viewable_tabs_iter()
                 .map(|tab| {
-                    let row = if tab.active {
-                        format!("{} - {}", tab.position + 1, tab.name)
-                            .red()
-                            .bold()
-                            .to_string()
-                    } else {
-                        format!("{} - {}", tab.position + 1, tab.name)
-                    };
+                    let mut row = {
+                        let mut position = format!("{}", tab.position + 1);
+                        let mut name = tab.name.to_string();
+                        // Change components
 
-                    if Some(tab.position) == self.selected {
-                        row.on_color(self.selection_background_color).to_string()
-                    } else {
-                        row
+                        if tab.active && self.underline_active {
+                            name = name.underline().to_string();
+                        }
+                        if self
+                            .selected
+                            .is_some_and(|selected_tab| tab.position == selected_tab)
+                        {
+                            if self.apply_selection_for_foreground_instead {
+                                name = name.color(self.selection_color).to_string();
+                            } else {
+                                name = name.on_color(self.selection_color).to_string();
+                            }
+                        }
+
+                        format!("{} - {}", position, name)
+                    };
+                    // Changes for all row
+                    if tab.active {
+                        if let Some(color) = self.active_tab_color {
+                            if self.apply_active_color_for_background_instead {
+                                row = row.on_color(color).to_string();
+                            } else {
+                                row = row.color(color).to_string();
+                            }
+                        }
                     }
+                    row
                 })
                 .collect::<Vec<String>>()
                 .join("\n")
