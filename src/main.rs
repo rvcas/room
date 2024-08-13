@@ -18,7 +18,7 @@ impl Default for State {
             tabs: Default::default(),
             filter: Default::default(),
             selected: Default::default(),
-            ignore_case: Default::default(),
+            ignore_case: true,
             selection_background_color: AnsiColors::Cyan,
         }
     }
@@ -114,17 +114,16 @@ impl ZellijPlugin for State {
             PermissionType::ChangeApplicationState,
         ]);
 
-        self.ignore_case = match configuration.remove("ignore_case") {
-            Some(value) => value.trim().parse().unwrap_or_else(|_| {
+        if let Some(value) = configuration.remove("ignore_case") {
+            self.ignore_case = value.trim().parse().unwrap_or_else(|_| {
                 panic!(
                     "'ingnore_case' config value must be 'true' or 'false', but it's \"{value}\""
                 )
-            }),
-            None => true,
+            });
         };
         if let Some(color) = configuration.remove("selected_color") {
             // TODO: validate input
-            self.selection_background_color = (*color).into();
+            self.selection_background_color = color.trim().into();
         }
 
         if !configuration.is_empty() {
