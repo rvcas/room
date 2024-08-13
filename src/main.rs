@@ -1,14 +1,27 @@
-use owo_colors::OwoColorize;
+use owo_colors::{AnsiColors, OwoColorize};
 use std::collections::BTreeMap;
 use std::fmt::Write;
 use zellij_tile::prelude::*;
 
-#[derive(Default)]
 struct State {
     tabs: Vec<TabInfo>,
     filter: String,
     selected: Option<usize>,
     ignore_case: bool,
+
+    selection_background_color: AnsiColors,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            tabs: Default::default(),
+            filter: Default::default(),
+            selected: Default::default(),
+            ignore_case: Default::default(),
+            selection_background_color: AnsiColors::Cyan,
+        }
+    }
 }
 
 impl State {
@@ -92,7 +105,7 @@ impl State {
 register_plugin!(State);
 
 impl ZellijPlugin for State {
-    fn load(&mut self, configuration: BTreeMap<String, String>) {
+    fn load(&mut self, mut configuration: BTreeMap<String, String>) {
         // we need the ReadApplicationState permission to receive the ModeUpdate and TabUpdate
         // events
         // we need the ChangeApplicationState permission to Change Zellij state (Panes, Tabs and UI)
@@ -101,7 +114,7 @@ impl ZellijPlugin for State {
             PermissionType::ChangeApplicationState,
         ]);
 
-        self.ignore_case = match configuration.get("ignore_case" as &str) {
+        self.ignore_case = match configuration.remove("ignore_case") {
             Some(value) => value.trim().parse().unwrap_or_else(|_| {
                 panic!(
                     "'ingnore_case' config value must be 'true' or 'false', but it's \"{value}\""
@@ -109,6 +122,10 @@ impl ZellijPlugin for State {
             }),
             None => true,
         };
+        if let Some(color) = configuration.remove("selected_color") {
+            // TODO: validate input
+            self.selection_background_color = (*color).into();
+        }
 
         if !configuration.is_empty() {
             let stringified_map = configuration
@@ -213,7 +230,7 @@ impl ZellijPlugin for State {
                     };
 
                     if Some(tab.position) == self.selected {
-                        row.on_cyan().to_string()
+                        row.on_color(self.selection_background_color).to_string()
                     } else {
                         row
                     }
