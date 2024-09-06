@@ -12,6 +12,9 @@ and switching between tabs.
 - `Enter` to switch to the selected tab
 - Start typing to filter the tab list
 - `Esc` or `Ctrl + c` to exit
+- Quick jump to a tab by pressing it's displayed number
+
+> To enable quick jumps, you need to set the config option for it to `quick_jump true`. The downside is that you won't be able to properly filter down tabs that have a number in their name.
 
 ## Why?
 
@@ -32,7 +35,8 @@ Download `room.wasm` from the [latest release](https://github.com/rvcas/room/rel
 ### Quick Install
 
 ```
-mkdir -p ~/.config/zellij/plugins && curl -L "https://github.com/rvcas/room/releases/latest/download/room.wasm" -o ~/.config/zellij/plugins/room.wasm
+mkdir -p ~/.config/zellij/plugins && \
+  curl -L "https://github.com/rvcas/room/releases/latest/download/room.wasm" -o ~/.config/zellij/plugins/room.wasm
 ```
 
 ## Keybinding
@@ -46,6 +50,7 @@ shared_except "locked" {
         LaunchOrFocusPlugin "file:~/.config/zellij/plugins/room.wasm" {
             floating true
             ignore_case true
+            quick_jump true
         }
     }
 }

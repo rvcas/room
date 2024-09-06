@@ -8,6 +8,7 @@ struct State {
     filter: String,
     selected: Option<usize>,
     ignore_case: bool,
+    quick_jump: bool,
 
     selection_color: AnsiColors,
     apply_selection_for_foreground_instead: bool,
@@ -23,6 +24,7 @@ impl Default for State {
             filter: Default::default(),
             selected: Default::default(),
             ignore_case: true,
+            quick_jump: false,
             selection_color: AnsiColors::Yellow,
             active_tab_color: None,
             underline_active: true,
@@ -129,10 +131,18 @@ impl ZellijPlugin for State {
                 )
             });
         };
+
+        if let Some(quick_jump) = configuration.remove("quick_jump") {
+            self.quick_jump = quick_jump.trim().parse().unwrap_or_else(|_| {
+                panic!("'quick_jump' config value must be 'true' or 'false', but it's \"{quick_jump}\"")
+            });
+        }
+
         if let Some(color) = configuration.remove("selection_color") {
             // TODO: validate input
             self.selection_color = color.trim().into();
         }
+
         if let Some(x) = configuration.remove("apply_selection_accent_to") {
             match x.as_str() {
                 "background" | "bg" => self.apply_selection_for_foreground_instead = false,
@@ -140,6 +150,7 @@ impl ZellijPlugin for State {
                 _ => panic!("'apply_selection_accent_to' config value must be 'fg', 'foreground', 'bg' or 'background', but it's \"{x}\""),
             }
         }
+
         if let Some(color) = configuration.remove("active_tab_color") {
             // TODO: validate input
             let temp = color.trim();
@@ -149,6 +160,7 @@ impl ZellijPlugin for State {
                 self.active_tab_color = Some(temp.into());
             }
         }
+
         if let Some(x) = configuration.remove("apply_tab_color_to") {
             match x.as_str() {
                 "background" | "bg" => self.apply_active_color_for_background_instead = true,
@@ -156,6 +168,7 @@ impl ZellijPlugin for State {
                 _ => panic!("'apply_tab_color_to' config value must be 'fg', 'foreground', 'bg' or 'background', but it's \"{x}\""),
             }
         }
+
         if let Some(value) = configuration.remove("underline_active") {
             self.underline_active = value.trim().parse().unwrap_or_else(|_| {
                 panic!(
@@ -171,7 +184,9 @@ impl ZellijPlugin for State {
                     let _ = writeln!(output, "('{k}': '{v}')\n");
                     output
                 });
+
             eprintln!("WARNING: The user added a config entry that isn't used.");
+
             eprint!("{stringified_map}");
         }
 
@@ -228,6 +243,9 @@ impl ZellijPlugin for State {
                 self.reset_selection();
 
                 should_render = true;
+            }
+            Event::Key(Key::Char(c)) if c.is_ascii_digit() && self.quick_jump => {
+                switch_tab_to(c.to_digit(10).unwrap());
             }
             Event::Key(Key::Char(c)) if c.is_ascii_alphabetic() || c.is_ascii_digit() => {
                 self.filter.push(c);
