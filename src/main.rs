@@ -201,12 +201,12 @@ impl ZellijPlugin for State {
                 close_focus();
             }
 
-            Event::Key(Key::Down | Key::BackTab) => {
+            Event::Key(Key::Down | Key::BackTab | Key::Ctrl('n')) => {
                 self.select_down();
 
                 should_render = true;
             }
-            Event::Key(Key::Up | Key::Ctrl('k')) => {
+            Event::Key(Key::Up | Key::Ctrl('k' | 'p')) => {
                 self.select_up();
 
                 should_render = true;
