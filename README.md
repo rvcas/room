@@ -32,7 +32,7 @@ Download `room.wasm` from the [latest release](https://github.com/rvcas/room/rel
 ### Quick Install
 
 ```
-curl -L "https://github.com/rvcas/room/releases/latest/download/room.wasm" -o ~/.config/zellij/plugins/room.wasm
+mkdir -p ~/.config/zellij/plugins && curl -L "https://github.com/rvcas/room/releases/latest/download/room.wasm" -o ~/.config/zellij/plugins/room.wasm
 ```
 
 ## Keybinding
