@@ -245,6 +245,7 @@ impl ZellijPlugin for State {
                 should_render = true;
             }
             Event::Key(Key::Char(c)) if c.is_ascii_digit() && self.quick_jump => {
+                close_focus();
                 switch_tab_to(c.to_digit(10).unwrap());
             }
             Event::Key(Key::Char(c)) if c.is_ascii_alphabetic() || c.is_ascii_digit() => {

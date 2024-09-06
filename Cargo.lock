@@ -2486,7 +2486,7 @@ dependencies = [
 
 [[package]]
 name = "room"
-version = "1.0.0"
+version = "1.1.1"
 dependencies = [
  "ansi_term",
  "chrono",
