@@ -18,30 +18,16 @@ struct State {
 
 impl Default for State {
     fn default() -> Self {
-        if cfg!(feature = "updated_defaults") {
-            Self {
-                tabs: Default::default(),
-                filter: Default::default(),
-                selected: Default::default(),
-                ignore_case: true,
-                selection_color: AnsiColors::Yellow,
-                active_tab_color: None,
-                underline_active: true,
-                apply_selection_for_foreground_instead: true,
-                apply_active_color_for_background_instead: false,
-            }
-        } else {
-            Self {
-                tabs: Default::default(),
-                filter: Default::default(),
-                selected: Default::default(),
-                ignore_case: true,
-                selection_color: AnsiColors::Cyan,
-                active_tab_color: Some(AnsiColors::Red),
-                underline_active: false,
-                apply_selection_for_foreground_instead: false,
-                apply_active_color_for_background_instead: false,
-            }
+        Self {
+            tabs: Default::default(),
+            filter: Default::default(),
+            selected: Default::default(),
+            ignore_case: true,
+            selection_color: AnsiColors::Yellow,
+            active_tab_color: None,
+            underline_active: true,
+            apply_selection_for_foreground_instead: true,
+            apply_active_color_for_background_instead: false,
         }
     }
 }
