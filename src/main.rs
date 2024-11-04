@@ -212,49 +212,85 @@ impl ZellijPlugin for State {
                 should_render = true;
             }
 
-            Event::Key(Key::Esc | Key::Ctrl('c')) => {
-                close_focus();
-            }
-
-            Event::Key(Key::Down | Key::BackTab | Key::Ctrl('n')) => {
-                self.select_down();
-
-                should_render = true;
-            }
-            Event::Key(Key::Up | Key::Ctrl('k' | 'p')) => {
-                self.select_up();
-
-                should_render = true;
-            }
-            Event::Key(Key::Char('\n')) => {
-                let tab = self
-                    .tabs
-                    .iter()
-                    .find(|tab| Some(tab.position) == self.selected);
-
-                if let Some(tab) = tab {
+            Event::Key(key) => match key.bare_key {
+                BareKey::Esc => {
                     close_focus();
-                    switch_tab_to(tab.position as u32 + 1);
                 }
-            }
-            Event::Key(Key::Backspace) => {
-                self.filter.pop();
+                BareKey::Char('c') if key.has_modifiers(&[KeyModifier::Ctrl]) => {
+                    close_focus();
+                }
 
-                self.reset_selection();
+                BareKey::Down => {
+                    self.select_down();
 
-                should_render = true;
-            }
-            Event::Key(Key::Char(c)) if c.is_ascii_digit() && self.quick_jump => {
-                close_focus();
-                switch_tab_to(c.to_digit(10).unwrap());
-            }
-            Event::Key(Key::Char(c)) if c.is_ascii_alphabetic() || c.is_ascii_digit() => {
-                self.filter.push(c);
+                    should_render = true;
+                }
+                BareKey::Tab if key.has_no_modifiers() => {
+                    self.select_down();
 
-                self.reset_selection();
+                    should_render = true;
+                }
+                BareKey::Char('n') if key.has_modifiers(&[KeyModifier::Ctrl]) => {
+                    self.select_down();
 
-                should_render = true;
-            }
+                    should_render = true;
+                }
+
+                BareKey::Up => {
+                    self.select_up();
+
+                    should_render = true;
+                }
+                BareKey::Tab if key.has_modifiers(&[KeyModifier::Shift]) => {
+                    self.select_up();
+
+                    should_render = true;
+                }
+                BareKey::Char('k') if key.has_modifiers(&[KeyModifier::Ctrl]) => {
+                    self.select_up();
+
+                    should_render = true;
+                }
+                BareKey::Char('p') if key.has_modifiers(&[KeyModifier::Ctrl]) => {
+                    self.select_up();
+
+                    should_render = true;
+                }
+
+                BareKey::Enter => {
+                    let tab = self
+                        .tabs
+                        .iter()
+                        .find(|tab| Some(tab.position) == self.selected);
+
+                    if let Some(tab) = tab {
+                        close_focus();
+                        switch_tab_to(tab.position as u32 + 1);
+                    }
+                }
+                BareKey::Backspace => {
+                    self.filter.pop();
+
+                    self.reset_selection();
+
+                    should_render = true;
+                }
+
+                BareKey::Char(c) if c.is_ascii_digit() && self.quick_jump => {
+                    close_focus();
+                    switch_tab_to(c.to_digit(10).unwrap());
+                }
+
+                BareKey::Char(c) if c.is_ascii_alphabetic() || c.is_ascii_digit() => {
+                    self.filter.push(c);
+
+                    self.reset_selection();
+
+                    should_render = true;
+                }
+                _ => (),
+            },
+
             _ => (),
         };
 
