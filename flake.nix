@@ -2,6 +2,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    gitignore = {
+      url = "github:hercules-ci/gitignore.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -10,12 +14,20 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pre-commit-hooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        gitignore.follows = "gitignore";
+      };
+    };
   };
 
   outputs =
     {
       nixpkgs,
       flake-utils,
+      pre-commit-hooks,
       rust-overlay,
       treefmt-nix,
       ...
@@ -63,6 +75,19 @@
             };
           }).config.build.wrapper;
 
+        pre-commit-check = pre-commit-hooks.lib.${system}.run {
+          src = ./.;
+
+          hooks = {
+            deadnix.enable = true;
+            nixfmt-rfc-style.enable = true;
+            treefmt = {
+              enable = true;
+              package = room-formatter;
+            };
+          };
+        };
+
         packages.default = rustPlatform.buildRustPackage rec {
           name = "room";
           src = ./.;
@@ -82,6 +107,8 @@
       in
       {
         inherit packages;
+
+        checks = { inherit pre-commit-check; };
 
         devShells.default = mkShell {
           name = "room";
