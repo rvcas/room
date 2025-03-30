@@ -8,12 +8,12 @@ layout {
             pane edit="Cargo.toml"
             pane stacked=true {
                 pane size="10%" command="bash" name="COMPILE AND RELOAD PLUGIN" {
-                    args "-c" "cargo build && zellij action start-or-reload-plugin file:target/wasm32-wasi/debug/room.wasm"
+                    args "-c" "cargo build && zellij action start-or-reload-plugin file:target/wasm32-wasip1/debug/room.wasm"
                     // if you have "watchexec" installed, you can comment the above line and uncomment the below one to build + reload the plugin on fs changes
-                    // args "-c" "watchexec 'cargo build && zellij action start-or-reload-plugin file:target/wasm32-wasi/debug/rust-plugin-example.wasm'"
+                    // args "-c" "watchexec 'cargo build && zellij action start-or-reload-plugin file:target/wasm32-wasip1/debug/rust-plugin-example.wasm'"
                 }
                 pane name="room" {
-                    plugin location="file:target/wasm32-wasi/debug/room.wasm"
+                    plugin location="file:target/wasm32-wasip1/debug/room.wasm"
                 }
             }
         }
