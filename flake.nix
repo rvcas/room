@@ -111,6 +111,8 @@
         checks = { inherit pre-commit-check; };
 
         devShells.default = mkShell {
+          inherit (pre-commit-check) shellHook;
+
           name = "room";
 
           buildInputs = [
