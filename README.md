@@ -61,6 +61,30 @@ shared_except "locked" {
 The `ignore_case` defaults to `false` if absent. If set to `true`, filtering the tab names ignores
 the case of the filter string and the tab name.
 
+## Pipe Commands
+
+This plugin supports pipe commands for programmatic pane focusing via Zellij's plugin pipe system.
+
+### focus-pane
+
+Focus a specific terminal pane by ID:
+
+```sh
+zellij pipe --plugin file:~/.config/zellij/plugins/room.wasm --name focus-pane -- <pane_id>
+```
+
+### Why?
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) supports terminal notifications to alert you when it needs input or permission. When running Claude Code inside Zellij, even if terminal notification passthrough worked, clicking a notification wouldn't navigate you to the correct Zellij tab and pane.
+
+[claude-zellij-whip](https://github.com/rvcas/claude-zellij-whip) solves this by sending native macOS notifications that, when clicked:
+
+1. Focus your terminal window
+2. Switch to the correct Zellij tab
+3. Focus the exact pane where Claude Code is running
+
+Zellij's CLI supports switching tabs but doesn't have a command to focus a specific pane by ID. The plugin API does support this via `focus_terminal_pane`, so this pipe command bridges that gap.
+
 ## Contributing
 
 If you find any issues or want to suggest ideas please [open an issue](https://github.com/rvcas/room/issues/new).

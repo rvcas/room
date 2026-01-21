@@ -297,6 +297,24 @@ impl ZellijPlugin for State {
         should_render
     }
 
+    fn pipe(&mut self, pipe_message: PipeMessage) -> bool {
+        // Handle focus-pane pipe messages from claude-zellij-whip
+        if pipe_message.name == "focus-pane" {
+            if let Some(payload) = &pipe_message.payload {
+                if let Ok(pane_id) = payload.trim().parse::<u32>() {
+                    focus_terminal_pane(pane_id, true);
+                }
+            }
+        }
+
+        // Always unblock CLI pipes so they don't hang
+        if let PipeSource::Cli(pipe_id) = &pipe_message.source {
+            unblock_cli_pipe_input(pipe_id);
+        }
+
+        false
+    }
+
     #[allow(unused_mut)]
     fn render(&mut self, _rows: usize, _cols: usize) {
         println!(
