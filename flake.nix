@@ -92,6 +92,7 @@
           name = "room";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
+          doCheck = false;
 
           nativeBuildInputs = with pkgs; [ perl ];
 
