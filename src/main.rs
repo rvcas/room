@@ -65,6 +65,25 @@ impl State {
         }
     }
 
+    /// Picks the selection to show once `self.tabs` holds a fresh `TabUpdate`.
+    ///
+    /// Zellij sends `TabUpdate` for changes unrelated to the picker (a rename, another
+    /// client switching tabs, and periodically under `zellij web`), so the current
+    /// selection is kept while that tab is still viewable. Otherwise it moves to the
+    /// active tab, or to the first viewable tab when the filter hides the active one.
+    ///
+    /// Selection is tracked by position, the only tab identity `TabInfo` carries, so
+    /// closing or moving a tab before the selected one shifts the selection onto
+    /// whichever tab takes its position.
+    fn selection_after_tab_update(&self) -> Option<usize> {
+        let tabs = self.viewable_tabs();
+
+        self.selected
+            .filter(|selected| tabs.iter().any(|tab| tab.position == *selected))
+            .or_else(|| tabs.iter().find(|tab| tab.active).map(|tab| tab.position))
+            .or_else(|| tabs.first().map(|tab| tab.position))
+    }
+
     fn select_down(&mut self) {
         let tabs = self.tabs.iter().filter(|tab| self.filter(tab));
 
@@ -197,18 +216,8 @@ impl ZellijPlugin for State {
         let mut should_render = false;
         match event {
             Event::TabUpdate(tab_info) => {
-                self.selected =
-                    tab_info.iter().find_map(
-                        |tab| {
-                            if tab.active {
-                                Some(tab.position)
-                            } else {
-                                None
-                            }
-                        },
-                    );
-
                 self.tabs = tab_info;
+                self.selected = self.selection_after_tab_update();
                 should_render = true;
             }
 
@@ -367,5 +376,153 @@ impl ZellijPlugin for State {
                 .collect::<Vec<String>>()
                 .join("\n")
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// zellij-tile's shims import this from the zellij host, so a native test binary
+    /// fails to link without a definition. Tests that reach a shim (`close_focus`,
+    /// `switch_tab_to`) would silently do nothing here, so keep them to pure state.
+    #[cfg(not(target_family = "wasm"))]
+    #[no_mangle]
+    extern "C" fn host_run_plugin_command() {}
+
+    fn tab(position: usize, name: &str, active: bool) -> TabInfo {
+        TabInfo {
+            position,
+            name: name.to_string(),
+            active,
+            ..Default::default()
+        }
+    }
+
+    fn tab_update(state: &mut State, tabs: Vec<TabInfo>) {
+        state.update(Event::TabUpdate(tabs));
+    }
+
+    #[test]
+    fn first_tab_update_selects_active_tab() {
+        let mut state = State::default();
+
+        tab_update(
+            &mut state,
+            vec![
+                tab(0, "alpha", false),
+                tab(1, "beta", true),
+                tab(2, "gamma", false),
+            ],
+        );
+
+        assert_eq!(state.selected, Some(1));
+    }
+
+    #[test]
+    fn tab_update_keeps_selection_on_existing_tab() {
+        let mut state = State::default();
+        tab_update(
+            &mut state,
+            vec![
+                tab(0, "alpha", false),
+                tab(1, "beta", true),
+                tab(2, "gamma", false),
+            ],
+        );
+        state.selected = Some(2);
+
+        tab_update(
+            &mut state,
+            vec![
+                tab(0, "renamed", false),
+                tab(1, "beta", true),
+                tab(2, "gamma", false),
+            ],
+        );
+
+        assert_eq!(state.selected, Some(2));
+    }
+
+    #[test]
+    fn tab_update_selects_active_tab_when_selected_tab_is_gone() {
+        let mut state = State::default();
+        tab_update(
+            &mut state,
+            vec![
+                tab(0, "alpha", false),
+                tab(1, "beta", true),
+                tab(2, "gamma", false),
+            ],
+        );
+        state.selected = Some(2);
+
+        tab_update(
+            &mut state,
+            vec![tab(0, "alpha", false), tab(1, "beta", true)],
+        );
+
+        assert_eq!(state.selected, Some(1));
+    }
+
+    #[test]
+    fn tab_update_selects_active_tab_when_filter_hides_selected_tab() {
+        let mut state = State::default();
+        tab_update(
+            &mut state,
+            vec![
+                tab(0, "alpha", false),
+                tab(1, "beta", true),
+                tab(2, "gamma", false),
+            ],
+        );
+        state.filter = "b".to_string();
+        state.selected = Some(2);
+
+        tab_update(
+            &mut state,
+            vec![
+                tab(0, "alpha", false),
+                tab(1, "beta", true),
+                tab(2, "gamma", false),
+            ],
+        );
+
+        assert_eq!(state.selected, Some(1));
+    }
+
+    #[test]
+    fn tab_update_selects_first_viewable_tab_when_filter_hides_active_tab() {
+        let mut state = State {
+            filter: "gam".to_string(),
+            ..Default::default()
+        };
+
+        tab_update(
+            &mut state,
+            vec![
+                tab(0, "alpha", true),
+                tab(1, "beta", false),
+                tab(2, "gamma", false),
+            ],
+        );
+
+        assert_eq!(state.selected, Some(2));
+    }
+
+    #[test]
+    fn tab_update_clears_selection_when_filter_hides_every_tab() {
+        let mut state = State {
+            filter: "zzz".to_string(),
+            selected: Some(0),
+            ..Default::default()
+        };
+
+        tab_update(
+            &mut state,
+            vec![tab(0, "alpha", true), tab(1, "beta", false)],
+        );
+
+        assert_eq!(state.selected, None);
     }
 }
